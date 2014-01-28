@@ -30,6 +30,11 @@ public class Father
         System.out.println("Father - drink");
     }
     
+    public String setFather(String name)
+    {
+        return "";
+    }
+
     static
     {
         System.out.println("Father - static block");

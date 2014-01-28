@@ -21,7 +21,12 @@ public class ClassOne
         return name;
     }
 
-    public final void setName(String name)
+    public final Father setFather(final Father father) {
+        father.setFather("");
+        return father;
+    }
+
+    public final void setName(final String name)
     {
         this.name = name;
     }
