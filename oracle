@@ -1,0 +1,104 @@
+-- ???????????
+select * from v$controlfile;
+-- ??????????????????
+select * from v$logfile;
+-- ?????????????????
+select * from v$datafile;
+select * from v$tempfile;
+
+-------------------------------------表空间管理-----------------------------
+-- 1. enterprise manager database control->tablespace https://localhost:1158/em/console/database/databaseObjectsSearch?event=search&otype=TABLESPACE&target=orcl.168.1.100&type=oracle_database&pageNum=4
+-- 2. ?????
+select * from dba_tablespaces;
+select * from dba_data_files;
+select * from dba_free_space;
+select * from dba_segments;
+select t.tablespace_name name, d.allocated, u.used, f.free, t.status, contents, t.extent_management extman, t.segment_space_management segman
+from dba_tablespaces t, 
+(select sum(bytes) allocated from dba_data_files where tablespace_name='EXAMPLE') d, 
+(select sum(bytes) free from dba_free_space where tablespace_name='EXAMPLE') f, 
+(select sum(bytes) used from dba_segments where tablespace_name='EXAMPLE') u 
+where tablespace_name='EXAMPLE'
+
+create tablespace storetabs 
+datafile 'D:\app\I311276\oradata\orcl\storetabls_01.DBF' size 50M, 'D:\app\I311276\oradata\orcl\storetabls_02.DBF' size 50M 
+extent management local uniform size 5m;
+select t.*, d.* from v$tablespace t, v$datafile d where t.ts#=d.ts#
+-----3. ?????
+alter tablespace storetabs rename to newstoretabs;
+-----4. ?????????? ?offline, normal, immediate, temporary
+alter tablespace storetabs offline
+-----5. ??????????read only, read write
+alter tablespace storetabs read only
+-----6. ????????
+alter tablespace datafile storetab resize 60m
+-----7. ??????
+--enterprise manager database control->tablespace->edit->thresholds
+-----8. ?????
+drop tablespace storetabs
+--------查询表空间是否手动管理
+select * from dba_tablespaces;
+-------创建手动管理表空间
+create tablespace manualsegs space management manual;
+select segment_space_management from dba_tablespaces where tablespace_name='manualsegs';
+-------建表和索引
+create table mantab (cl number) tablespace manualsegs;
+create index mantab1 on mantab(c1) tablespace manualsegs;
+------创建账户
+create user tomtest identified by tiger
+default tablespace users temporary tablespace temp
+quota 100m on users, quota unlimited on storetabs
+profile developer_profile
+password expire account unlock;
+select * from dba_users;
+-------修改账户
+alter user tomtest identified by tomtest;
+-------更改默认表空间和临时表空间
+alter user tomtest default tablespace store_data temporary tablespace temp;
+-------强制更改口令
+alter user tomtest password expire;
+------锁定账户
+alter user tomtest account lock;
+------删除账户
+drop user tomtest;
+------不希望确定对象就删除
+drop user tomtest cascade;
+------更改用户临时表空间
+alter user tomtest temporary tablespace storetabs;
+-----------授予和撤销系统权限.系统权限的撤销不会级联
+grant create session, alter session, create table, create view, create synonym, create cluster, create database link, create sequence, create trigger, create type, create procedure, create operator to tomtest;
+connect / as sysdba;
+----------授予对象权限
+-------允许tomtest查询store模式中的orders表的所有列，但只对一个命名列order_status执行写操作.
+grant select on store.customer to tomtest;
+grant update (order_status) on store.orders to tomtest;
+grant all on store.regions to tomtest;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
